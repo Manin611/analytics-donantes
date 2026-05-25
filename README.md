@@ -479,7 +479,14 @@ streamlit run app.py --server.port 8501 --server.address localhost
 
 ## 👥 Equipo
 
-Proyecto desarrollado por: [Tu nombre] + equipo
+Proyecto analítico e integración de datos desarrollado en colaboración por:
+- **Anderson Vanegas** - *Ingeniería de Datos y Dashboard (Python)*
+- **Samuel Ceballos** - *Desarrollo de Backend (Spring Boot & MySQL)*
+- **Darwin Cardenas** - *Desarrollo Front-End (React, Vite & Tailwind)*
+
+**Institución:** CESDE  
+**Curso:** 
+**Año:** 2026
 
 ## 📝 Licencia
 

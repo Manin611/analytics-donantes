@@ -56,15 +56,16 @@ if donaciones.empty and not donantes.empty:
     import random
     # Generamos donaciones dinámicas para tus donantes reales
     for i, id_d in enumerate(ids_reales_donantes):
-        # Asignamos donaciones a la gran mayoría para inflar las métricas de forma realista
-        if i % 5 != 4:  
-            lista_donaciones.append({
-                'idDonacion': i + 1,
-                'fechaDonacion': pd.to_datetime(f"2026-05-{10 + (i % 15)}"),
-                'cantidadMl': random.choice([420, 450, 500]),
-                'estado': 'completada',
-                'idDonante': id_d
-            })
+        # Asignamos diferentes estados para que el nuevo filtro tenga qué buscar
+        estado_simulado = random.choice(['completada', 'completada', 'completada', 'pendiente', 'cancelada'])
+        
+        lista_donaciones.append({
+            'idDonacion': i + 1,
+            'fechaDonacion': pd.to_datetime(f"2026-05-{10 + (i % 15)}"),
+            'cantidadMl': random.choice([420, 450, 500]),
+            'estado': estado_simulado,
+            'idDonante': id_d
+        })
             
     # Sobrescribimos el dataframe vacío con el historial simulado
     donaciones = pd.DataFrame(lista_donaciones)
@@ -76,7 +77,7 @@ st.sidebar.image("https://cdn-icons-png.flaticon.com/512/5081/5081210.png", widt
 st.sidebar.title("Filtros Globales")
 st.sidebar.markdown("---")
 
-# Casilla para activar "Todo el tiempo" por defecto
+# A. Casilla para activar "Todo el tiempo"
 todo_el_tiempo = st.sidebar.checkbox("Mostrar todo el historial (Todo el tiempo)", value=True)
 
 if not donaciones.empty and 'fechaDonacion' in donaciones.columns and donaciones['fechaDonacion'].notnull().any():
@@ -99,7 +100,7 @@ if not todo_el_tiempo:
 else:
     st.sidebar.info("🗓️ Filtro de fechas desactivado: Mostrando datos históricos completos.")
 
-# Filtro de Tipos de Sangre
+# B. Filtro de Tipos de Sangre
 if not donantes.empty and 'tipoSangre' in donantes.columns:
     lista_sangre = ['Todos'] + sorted(donantes['tipoSangre'].unique().tolist())
 else:
@@ -107,25 +108,39 @@ else:
 
 sangre_seleccionada = st.sidebar.selectbox("Seleccionar tipo de sangre:", lista_sangre)
 
+# C. Filtro de Estado de Donación
+if not donaciones.empty and 'estado' in donaciones.columns:
+    lista_estados = ['Todos'] + sorted(donaciones['estado'].unique().tolist())
+else:
+    lista_estados = ['Todos', 'completada', 'pendiente', 'cancelada']
+
+estado_seleccionado = st.sidebar.selectbox("Seleccionar estado de donación:", lista_estados)
+
 
 # 4. APLICACIÓN DE FILTROS A LOS DATAFRAMES
 df_donantes_filtrado = donantes.copy()
 
-# Filtrar Sangre
+# Filtrar Sangre en Donantes
 if sangre_seleccionada != 'Todos' and not df_donantes_filtrado.empty:
     df_donantes_filtrado = df_donantes_filtrado[df_donantes_filtrado['tipoSangre'] == sangre_seleccionada]
 
-# Filtrar Donaciones por rango temporal
+# Filtrar Donaciones
 donaciones_filtradas = donaciones.copy()
+
+# Aplicar filtro de fecha
 if not todo_el_tiempo and not donaciones.empty and 'fechaDonacion' in donaciones.columns:
     try:
         fecha_inicio, fecha_fin = rango_fechas
-        donaciones_filtradas = donaciones[
-            (donaciones['fechaDonacion'].dt.date >= fecha_inicio) & 
-            (donaciones['fechaDonacion'].dt.date <= fecha_fin)
+        donaciones_filtradas = donaciones_filtradas[
+            (donaciones_filtradas['fechaDonacion'].dt.date >= fecha_inicio) & 
+            (donaciones_filtradas['fechaDonacion'].dt.date <= fecha_fin)
         ]
     except ValueError:
         pass
+
+# Aplicar filtro de estado
+if estado_seleccionado != 'Todos' and not donaciones_filtradas.empty:
+    donaciones_filtradas = donaciones_filtradas[donaciones_filtradas['estado'] == estado_seleccionado]
 
 
 # 5. ESTRUCTURA VISUAL DEL DASHBOARD
